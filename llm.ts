@@ -14,6 +14,24 @@ export async function sendPrompt({
   sessionID: string;
   messages?: CoreMessage[];
 }) {
+  const newMessage: CoreMessage = {
+    role: "user",
+    content: [
+      {
+        type: "text",
+        text: `Consider the following screenshot of a web page, with the goal being "${goal}". 
+			Determine the immediate next step to take to achieve the goal. 
+			If the goal has been achieved, return "close".`,
+      },
+      {
+        type: "image",
+        image: (await runStagehand({
+          sessionID,
+          method: "SCREENSHOT",
+        })) as string,
+      },
+    ],
+  };
   const result = await generateText({
     model: LLMClient,
     tools: {
@@ -44,9 +62,22 @@ export async function sendPrompt({
           });
         },
       }),
+      observe: tool({
+        description: "Get a list of ",
+        parameters: z.object({
+          observation: z.string().describe("The observation to perform"),
+        }),
+        execute: async ({ observation }) => {
+          return await runStagehand({
+            sessionID,
+            method: "OBSERVE",
+            instruction: observation,
+          });
+        },
+      }),
       extract: tool({
         description:
-          "Extract data from the current page assuming the data is already visible to an end user. ONLY USE THIS IF YOU ARE SURE THE DATA IS VISIBLE.",
+          "Extract data from the current page assuming the data is already visible to an end user. ONLY USE THIS IF YOU ARE SURE THE DATA IS VISIBLE AND READY TO BE EXTRACTED. If you need to click or scroll to get the data, use the act tool instead.",
         parameters: z.object({
           data: z.string().describe("The data to extract"),
         }),
@@ -69,28 +100,11 @@ export async function sendPrompt({
         },
       }),
     },
-    messages: [
-      ...messages,
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: `Consider the following screenshot of a web page, with the goal being "${goal}". 
-			Determine the immediate next step to take to achieve the goal. 
-			If the goal has been achieved, return "close".`,
-          },
-          {
-            type: "image",
-            image: (await runStagehand({
-              sessionID,
-              method: "SCREENSHOT",
-            })) as string,
-          },
-        ],
-      },
-    ],
+    messages: [...messages, newMessage],
   });
   console.log("RESULT", result);
-  return result;
+  return {
+    result,
+    messages: [...messages, newMessage],
+  };
 }

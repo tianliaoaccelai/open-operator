@@ -13,19 +13,25 @@ import chalk from "chalk";
 import { sendPrompt } from "./llm.js";
 import Browserbase from "@browserbasehq/sdk";
 import { announce } from "./utils.js";
+import { CoreMessage } from "ai";
 
-async function agentLoop(sessionID: string, goal: string) {
-  const result = await sendPrompt({
+async function agentLoop(
+  sessionID: string,
+  goal: string,
+  messages: CoreMessage[]
+) {
+  const { result, messages: newMessages } = await sendPrompt({
     goal,
     sessionID,
   });
+  console.log("NEW MESSAGES", newMessages);
 
   console.log("TEXT:", result.text);
   console.log("REASONING:", result.reasoning);
   console.log("TOOL CALLS:", result.toolCalls);
   console.log("TOOL RESULTS:", result.toolResults);
   if (result.toolCalls.length > 0 && result.toolCalls[0].toolName !== "close") {
-    return await agentLoop(sessionID, goal);
+    return await agentLoop(sessionID, goal, newMessages);
   }
 }
 
@@ -51,7 +57,8 @@ async function run() {
 
   await agentLoop(
     session.id,
-    "find stagehand by browserbase on github and tell me who the top contributor is"
+    "find stagehand by browserbase on github and tell me who the top contributor is",
+    []
   );
 }
 

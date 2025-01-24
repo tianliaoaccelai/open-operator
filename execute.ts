@@ -7,7 +7,7 @@ export async function runStagehand({
   instruction,
 }: {
   sessionID: string;
-  method: "GOTO" | "ACT" | "EXTRACT" | "CLOSE" | "SCREENSHOT";
+  method: "GOTO" | "ACT" | "EXTRACT" | "CLOSE" | "SCREENSHOT" | "OBSERVE";
   instruction?: string;
 }) {
   console.log("RUNNING STAGEHAND", method, instruction);
@@ -28,6 +28,12 @@ export async function runStagehand({
   }
   if (method === "EXTRACT") {
     await page.extract(instruction!);
+  }
+  if (method === "OBSERVE") {
+    await page.observe({
+      instruction,
+      useAccessibilityTree: true,
+    });
   }
   if (method === "CLOSE") {
     await stagehand.close();
