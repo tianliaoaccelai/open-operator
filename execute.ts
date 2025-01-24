@@ -10,7 +10,6 @@ export async function runStagehand({
   method: "GOTO" | "ACT" | "EXTRACT" | "CLOSE" | "SCREENSHOT" | "OBSERVE";
   instruction?: string;
 }) {
-  console.log("RUNNING STAGEHAND", method, instruction);
   const stagehand = new Stagehand({
     ...StagehandConfig,
     browserbaseSessionID: sessionID,

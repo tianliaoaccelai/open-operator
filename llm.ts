@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CoreMessage, generateText, tool } from "ai";
+import { CoreMessage, generateObject, generateText, tool } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { runStagehand } from "./execute.js";
 
@@ -32,79 +32,23 @@ export async function sendPrompt({
       },
     ],
   };
-  const result = await generateText({
+  const result = await generateObject({
     model: LLMClient,
-    tools: {
-      goto: tool({
-        description: "Navigate to a website",
-        parameters: z.object({
-          url: z.string().describe("The URL to navigate to"),
-        }),
-        execute: async ({ url }) => {
-          return await runStagehand({
-            sessionID,
-            method: "GOTO",
-            instruction: url,
-          });
-        },
-      }),
-      act: tool({
-        description:
-          "Act on the current page, like clicking a button or filling out a textbox. This should be a very simple, one-step instruction.",
-        parameters: z.object({
-          action: z.string().describe("The action to perform"),
-        }),
-        execute: async ({ action }) => {
-          return await runStagehand({
-            sessionID,
-            method: "ACT",
-            instruction: action,
-          });
-        },
-      }),
-      observe: tool({
-        description: "Get a list of ",
-        parameters: z.object({
-          observation: z.string().describe("The observation to perform"),
-        }),
-        execute: async ({ observation }) => {
-          return await runStagehand({
-            sessionID,
-            method: "OBSERVE",
-            instruction: observation,
-          });
-        },
-      }),
-      extract: tool({
-        description:
-          "Extract data from the current page assuming the data is already visible to an end user. ONLY USE THIS IF YOU ARE SURE THE DATA IS VISIBLE AND READY TO BE EXTRACTED. If you need to click or scroll to get the data, use the act tool instead.",
-        parameters: z.object({
-          data: z.string().describe("The data to extract"),
-        }),
-        execute: async ({ data }) => {
-          return await runStagehand({
-            sessionID,
-            method: "EXTRACT",
-            instruction: data,
-          });
-        },
-      }),
-      close: tool({
-        description: "Close the current session",
-        parameters: z.object({}),
-        execute: async () => {
-          return await runStagehand({
-            sessionID,
-            method: "CLOSE",
-          });
-        },
-      }),
-    },
+    schema: z.object({
+      text: z.string().describe("The text to display"),
+      reasoning: z.string().describe("The reasoning to display"),
+      tool: z.enum(["GOTO", "ACT", "EXTRACT", "OBSERVE", "CLOSE"]),
+      instruction: z
+        .string()
+        .describe(
+          "The instruction to display, i.e. the url to navigate to, the action to perform, the data to extract, the observation to make, etc. If the tool is 'CLOSE', this should be an empty string."
+        ),
+    }),
     messages: [...messages, newMessage],
   });
   console.log("RESULT", result);
   return {
-    result,
+    result: result.object,
     messages: [...messages, newMessage],
   };
 }

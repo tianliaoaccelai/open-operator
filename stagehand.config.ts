@@ -9,8 +9,7 @@ const StagehandConfig: ConstructorParams = {
   projectId: process.env.BROWSERBASE_PROJECT_ID! /* Project identifier */,
   debugDom: true /* Enable DOM debugging features */,
   headless: false /* Run browser in headless mode */,
-  logger: (message: LogLine) =>
-    console.log(logLineToString(message)) /* Custom logging function */,
+  logger: (message: LogLine) => {},
   domSettleTimeoutMs: 30_000 /* Timeout for DOM to settle in milliseconds */,
   enableCaching: false /* Enable caching functionality */,
   modelName: "gpt-4o" /* Name of the model to use */,
