@@ -20,13 +20,15 @@ import { runStagehand } from "./execute.js";
 async function agentLoop(
   sessionID: string,
   goal: string,
-  messages: CoreMessage[]
+  messages: CoreMessage[],
+  previousExtraction?: string
 ) {
   // ALEX: sendPrompt should be run server-side
   const { result, messages: newMessages } = await sendPrompt({
     goal,
     sessionID,
     messages,
+    previousExtraction,
   });
   //   ALEX: save this to react state + display in UI
   //   IF YOU WANT TO SEE THE THINGS IT'S GOING TO DO BEFORE DOING IT:
@@ -39,13 +41,18 @@ async function agentLoop(
     // TOOL_CALLS: result.toolCalls,
     // TOOL_RESULTS: result.toolResults,
   });
-  await runStagehand({
+  previousExtraction = await runStagehand({
     sessionID,
     method: result.tool,
     instruction: result.instruction,
   });
+
+  if (previousExtraction) {
+    console.log("EXTRACTION RESULT:", previousExtraction);
+  }
+
   if (result.tool !== "CLOSE") {
-    return await agentLoop(sessionID, goal, newMessages);
+    return await agentLoop(sessionID, goal, newMessages, previousExtraction);
   }
   return result;
 }

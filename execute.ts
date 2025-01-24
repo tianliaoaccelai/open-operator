@@ -26,7 +26,8 @@ export async function runStagehand({
     await page.act(instruction!);
   }
   if (method === "EXTRACT") {
-    await page.extract(instruction!);
+    const { extraction } = await page.extract(instruction!);
+    return extraction;
   }
   if (method === "OBSERVE") {
     await page.observe({
