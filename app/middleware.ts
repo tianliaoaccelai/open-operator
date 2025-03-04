@@ -7,9 +7,19 @@ import { NextResponse } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 网站数据上报公开接口
   if (pathname.startsWith("/api")) {
     // 设置跨域
+    if (request.method === "OPTIONS") {
+      // 处理预检请求
+      const response = new NextResponse(null, { status: 204 });
+      response.headers.set("Access-Control-Allow-Origin", "*");
+      response.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE");
+      response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      response.headers.set("Access-Control-Max-Age", "86400");
+      return response;
+    }
+    
+    // 处理实际请求
     const res = NextResponse.next();
     res.headers.set("Access-Control-Allow-Origin", "*");
     res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE");
